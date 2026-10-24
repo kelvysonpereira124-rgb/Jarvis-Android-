@@ -14,7 +14,7 @@ from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse
+from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -491,6 +491,57 @@ def ask_ai(message: str, history: list) -> str:
     return reply.strip()
 
 
+def elevenlabs_voice_configured() -> bool:
+    return bool(os.environ.get("ELEVENLABS_API_KEY") and os.environ.get("ELEVENLABS_VOICE_ID"))
+
+
+def elevenlabs_speech(text: str) -> bytes:
+    api_key = os.environ.get("ELEVENLABS_API_KEY", "")
+    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "").strip()
+    if not api_key or not voice_id:
+        raise AIConfigurationError("Configure ELEVENLABS_API_KEY e ELEVENLABS_VOICE_ID para usar a voz ElevenLabs.")
+    if not isinstance(text, str) or not text.strip():
+        raise ValueError("O texto para sintetizar não pode ficar vazio.")
+    if len(text) > 3000:
+        raise ValueError("O texto para sintetizar excede o limite de 3000 caracteres.")
+
+    body = json.dumps(
+        {
+            "text": text.strip(),
+            "model_id": os.environ.get("ELEVENLABS_MODEL", "eleven_multilingual_v2"),
+        }
+    ).encode("utf-8")
+    request = Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{quote(voice_id, safe='')}",
+        data=body,
+        headers={
+            "xi-api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        },
+        method="POST",
+    )
+    try:
+        with urlopen(request, timeout=60) as response:
+            audio = response.read()
+    except HTTPError as error:
+        try:
+            details = json.loads(error.read().decode("utf-8")).get("detail", {})
+            message = details.get("message") or details.get("status")
+        except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+            message = None
+        description = f"ElevenLabs retornou HTTP {error.code}."
+        if message:
+            description += f" {message}"
+        raise AIServiceError(description) from error
+    except (URLError, TimeoutError) as error:
+        raise AIServiceError("Não foi possível conectar à ElevenLabs.") from error
+
+    if not audio:
+        raise AIServiceError("ElevenLabs retornou um áudio vazio.")
+    return audio
+
+
 class AssistantHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(BASE_DIR), **kwargs)
@@ -534,6 +585,9 @@ class AssistantHandler(SimpleHTTPRequestHandler):
                 provider, model, configured = "inválido", "", False
             self.send_json({"provider": provider, "model": model, "configured": configured})
             return
+        if path == "/api/voice-status":
+            self.send_json({"configured": elevenlabs_voice_configured()})
+            return
         if path == "/api/tasks":
             self.send_json(load_data().get("tasks", []))
             return
@@ -569,6 +623,23 @@ class AssistantHandler(SimpleHTTPRequestHandler):
         if not self._authorize():
             return
         path = urlparse(self.path).path
+
+        if path == "/api/speech":
+            payload = self._read_json_body()
+            try:
+                audio = elevenlabs_speech(payload.get("text", ""))
+            except AIConfigurationError as error:
+                self.send_json({"error": str(error)}, status=503)
+                return
+            except ValueError as error:
+                self.send_json({"error": str(error)}, status=400)
+                return
+            except AIServiceError as error:
+                self.send_json({"error": str(error)}, status=502)
+                return
+            self.send_audio(audio)
+            return
+
         payload = self._read_json_body()
 
         if path == "/api/projects":
@@ -705,6 +776,14 @@ class AssistantHandler(SimpleHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def send_audio(self, audio: bytes):
+        self.send_response(200)
+        self.send_header("Content-Type", "audio/mpeg")
+        self.send_header("Content-Length", str(len(audio)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(audio)
 
 
 def run_server(host: str | None = None, port: int | None = None):

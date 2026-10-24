@@ -48,6 +48,9 @@ let voiceArmed = false;
 let waitingForVoiceCommand = false;
 let voiceProcessing = false;
 let voiceSpeaking = false;
+let elevenLabsVoiceEnabled = false;
+let elevenLabsVoiceStatusPromise = Promise.resolve();
+let currentSpeechAudio;
 let hudRotationX = -15;
 let hudRotationY = 0;
 let hudScale = 1;
@@ -417,21 +420,17 @@ async function sendMessage(message, speakReply = false) {
     }
     const historySaved = saveChatHistory();
     voiceStatus.textContent = historySaved ? 'Pronto.' : 'Resposta recebida, mas não foi possível salvar o histórico.';
-    if (speakReply && speakReplies && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(response.reply);
-      utterance.lang = 'pt-BR';
+    if (speakReply && speakReplies) {
       voiceSpeaking = true;
-      utterance.onend = () => {
+      try {
+        await speakAssistantReply(response.reply);
+      } catch (error) {
+        if (speakReplies) {
+          voiceStatus.textContent = `Resposta recebida, mas não foi possível reproduzir a voz: ${error.message}`;
+        }
+      } finally {
         voiceSpeaking = false;
-        scheduleWakeRecognition();
-      };
-      utterance.onerror = () => {
-        voiceSpeaking = false;
-        voiceStatus.textContent = 'Não foi possível reproduzir a resposta em voz.';
-        scheduleWakeRecognition();
-      };
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
+      }
     }
     await loadAll();
   } catch (error) {
@@ -442,6 +441,60 @@ async function sendMessage(message, speakReply = false) {
     voiceProcessing = false;
     scheduleWakeRecognition();
   }
+}
+
+async function speakAssistantReply(text) {
+  await elevenLabsVoiceStatusPromise;
+  if (elevenLabsVoiceEnabled) {
+    const response = await fetch('/api/speech', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!response.ok) {
+      let message = `ElevenLabs retornou HTTP ${response.status}.`;
+      try {
+        const error = await response.json();
+        message = error.error || message;
+      } catch {
+        // Keep the HTTP status if the server response is not JSON.
+      }
+      throw new Error(message);
+    }
+
+    const audioUrl = URL.createObjectURL(await response.blob());
+    const audio = new Audio(audioUrl);
+    currentSpeechAudio = audio;
+    try {
+      const playbackEnded = new Promise((resolve, reject) => {
+        audio.addEventListener('ended', resolve, { once: true });
+        audio.addEventListener('error', () => reject(new Error('O áudio não pôde ser reproduzido.')), { once: true });
+        audio.addEventListener('pause', () => {
+          if (!audio.ended && !speakReplies) {
+            reject(new Error('Reprodução de voz interrompida.'));
+          }
+        }, { once: true });
+      });
+      await audio.play();
+      await playbackEnded;
+    } finally {
+      currentSpeechAudio = undefined;
+      URL.revokeObjectURL(audioUrl);
+    }
+    return;
+  }
+
+  if (!('speechSynthesis' in window)) {
+    throw new Error('Síntese de voz não está disponível neste navegador.');
+  }
+  await new Promise((resolve, reject) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'pt-BR';
+    utterance.onend = resolve;
+    utterance.onerror = () => reject(new Error('A voz do navegador falhou.'));
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 async function handleChatSubmit(event) {
@@ -915,8 +968,12 @@ voiceOutputButton.addEventListener('click', () => {
   speakReplies = !speakReplies;
   voiceOutputButton.textContent = `Voz: ${speakReplies ? 'ligada' : 'desligada'}`;
   voiceOutputButton.setAttribute('aria-pressed', String(speakReplies));
-  if (!speakReplies && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+  if (!speakReplies) {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    currentSpeechAudio?.pause();
+    currentSpeechAudio = undefined;
     voiceSpeaking = false;
     scheduleWakeRecognition();
   }
@@ -927,6 +984,11 @@ loadAll().catch((error) => {
 });
 loadAIStatus().catch((error) => {
   aiStatus.textContent = `Não foi possível consultar o provedor: ${error.message}`;
+});
+elevenLabsVoiceStatusPromise = fetchJson('/api/voice-status').then((status) => {
+  elevenLabsVoiceEnabled = Boolean(status.configured);
+}).catch((error) => {
+  voiceStatus.textContent = `Não foi possível consultar a voz ElevenLabs: ${error.message}`;
 });
 
 window.setInterval(() => {

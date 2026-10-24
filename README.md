@@ -14,6 +14,14 @@ python assistant_app.py
 
 Em seguida, abra [http://localhost:8000](http://localhost:8000) no Chrome ou Edge. Para ativar a palavra de chamada, use o botão discreto de microfone no canto da tela, permita o acesso quando solicitado e mantenha a página aberta. A voz de saída pode ser alternada no chat.
 
+Para executar verificações locais no PowerShell, com o servidor já iniciado, rode:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\test_jarvis.ps1
+```
+
+Se o PowerShell bloquear scripts, esse comando libera a execução somente nesse processo e não altera a política do computador. O teste verifica a sintaxe do Python e JavaScript, a página, os recursos 3D/voz e os endpoints de leitura da API; não altera tarefas, notas ou lembretes. O teste do microfone em si deve ser feito no navegador.
+
 Para usar IA local, instale e inicie o [Ollama](https://ollama.com/), baixe um modelo e rode o servidor assim:
 
 ```powershell
@@ -22,6 +30,24 @@ $env:JARVIS_PROVIDER="ollama"
 $env:OLLAMA_MODEL="qwen2.5:7b"
 python assistant_app.py
 ```
+
+### Voz ElevenLabs
+
+Para criar uma voz instantânea a partir da amostra local autorizada, encerre primeiro o servidor atual com `Ctrl+C`. No PowerShell, execute:
+
+```powershell
+git clone https://github.com/kelvysonpereira124-rgb/Jarvis-Android-.git "$HOME\Jarvis-Android"
+Set-Location "$HOME\Jarvis-Android"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup_elevenlabs.ps1
+```
+
+Crie uma chave em [ElevenLabs API Keys](https://elevenlabs.io/app/settings/api-keys). O script pede essa chave sem exibi-la, envia o MP3 configurado à ElevenLabs para clonagem instantânea e salva somente o Voice ID em `%LOCALAPPDATA%\Jarvis\elevenlabs-voice-id.txt`. A chave fica apenas no processo e é removida quando o servidor encerra. O script não envia o MP3 novamente quando o Voice ID local já existe. Para iniciar depois reutilizando o Voice ID salvo, use:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\setup_elevenlabs.ps1
+```
+
+Use `-CreateVoice` apenas se quiser criar outra cópia; isso pode consumir cota ou ocupar outro espaço de voz na conta. A clonagem instantânea pode produzir uma voz diferente da amostra, sobretudo com uma gravação de aproximadamente 9 segundos. Respostas por voz usam a ElevenLabs quando configurada; sem ela, o JARVIS continua usando a síntese de voz do navegador. A geração de cada resposta pode consumir créditos da conta.
 
 Para usar a API gratuita do Groq, crie uma chave na [Groq Console](https://console.groq.com/keys) e configure:
 
