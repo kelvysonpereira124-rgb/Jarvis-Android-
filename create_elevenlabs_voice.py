@@ -69,7 +69,10 @@ def main() -> int:
         try:
             body = json.loads(error.read().decode("utf-8"))
             detail = body.get("detail", {})
-            message = detail.get("message") or detail.get("status") or str(detail)
+            if isinstance(detail, dict):
+                message = detail.get("message") or detail.get("status") or str(detail)
+            else:
+                message = str(detail)
         except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
             message = "The service returned an unreadable error."
         print(f"ElevenLabs returned HTTP {error.code}: {message}", file=sys.stderr)

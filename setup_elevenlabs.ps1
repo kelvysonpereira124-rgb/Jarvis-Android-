@@ -54,12 +54,25 @@ try {
     Write-Host 'Uploading the selected sample to ElevenLabs to create your JARVIS voice...' -ForegroundColor Cyan
     Push-Location $projectRoot
     try {
-      $resultLines = & python (Join-Path $projectRoot 'create_elevenlabs_voice.py') $AudioPath
-      if ($LASTEXITCODE -ne 0) {
-        throw 'Voice creation failed. See the ElevenLabs error above.'
-      }
+      $previousErrorActionPreference = $ErrorActionPreference
+      $ErrorActionPreference = 'Continue'
+      $resultLines = @(& python (Join-Path $projectRoot 'create_elevenlabs_voice.py') $AudioPath 2>&1 | ForEach-Object { $_.ToString() })
+      $voiceCreationExitCode = $LASTEXITCODE
+      $ErrorActionPreference = $previousErrorActionPreference
     } finally {
+      $ErrorActionPreference = $previousErrorActionPreference
       Pop-Location
+    }
+
+    if ($voiceCreationExitCode -ne 0) {
+      $errorDetails = ($resultLines -join [Environment]::NewLine).Trim()
+      if ($errorDetails -and $env:ELEVENLABS_API_KEY) {
+        $errorDetails = $errorDetails.Replace($env:ELEVENLABS_API_KEY, '[redacted]')
+      }
+      if (-not $errorDetails) {
+        $errorDetails = "The voice creation process exited with code $voiceCreationExitCode."
+      }
+      throw "Voice creation failed: $errorDetails"
     }
 
     $result = ($resultLines -join "`n") | ConvertFrom-Json
