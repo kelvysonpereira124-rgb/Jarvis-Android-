@@ -13,13 +13,14 @@ $oldVoiceId = $env:ELEVENLABS_VOICE_ID
 try {
   $baseUri = [Uri]$BaseUrl
   $port = if ($baseUri.IsDefaultPort) { if ($baseUri.Scheme -eq 'https') { 443 } else { 80 } } else { $baseUri.Port }
+  $serverAlreadyRunning = $false
   $client = [System.Net.Sockets.TcpClient]::new()
   try {
     $connect = $client.BeginConnect($baseUri.Host, $port, $null, $null)
     if ($connect.AsyncWaitHandle.WaitOne(500)) {
       try {
         $client.EndConnect($connect)
-        throw "A server already responds on port $port. Stop the current JARVIS server with Ctrl+C, then run this setup again."
+        $serverAlreadyRunning = $true
       } catch [System.Net.Sockets.SocketException] {
       }
     }
@@ -37,6 +38,12 @@ try {
   $voiceId = $null
   if (-not $CreateVoice -and (Test-Path -LiteralPath $voiceIdPath)) {
     $voiceId = (Get-Content -LiteralPath $voiceIdPath -Raw).Trim()
+  }
+
+  if ($serverAlreadyRunning -and $voiceId) {
+    Write-Host "A voice is already configured, but JARVIS is still running on port $port." -ForegroundColor Yellow
+    Write-Host 'Stop the current server with Ctrl+C, then run this setup command again to restart JARVIS with ElevenLabs.' -ForegroundColor Yellow
+    return
   }
 
   if (-not $voiceId) {
@@ -69,6 +76,12 @@ try {
     Write-Host 'Voice clone created. Only the non-secret voice ID was saved locally.' -ForegroundColor Green
   } else {
     Write-Host 'Using the saved ElevenLabs voice ID. No audio sample will be uploaded.' -ForegroundColor Cyan
+  }
+
+  if ($serverAlreadyRunning) {
+    Write-Host 'The current JARVIS server has not loaded the new voice yet.' -ForegroundColor Yellow
+    Write-Host 'Stop it with Ctrl+C, then run this setup command again. It will reuse the saved voice ID and will not upload the sample again.' -ForegroundColor Yellow
+    return
   }
 
   $env:ELEVENLABS_VOICE_ID = $voiceId

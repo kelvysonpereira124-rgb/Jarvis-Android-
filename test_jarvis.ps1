@@ -131,6 +131,15 @@ Invoke-Check 'ElevenLabs voice status responds without exposing credentials' {
   }
 }
 
+Invoke-Check 'ElevenLabs setup supports a running JARVIS server' {
+  $setup = Get-Content -LiteralPath (Join-Path $projectRoot 'setup_elevenlabs.ps1') -Raw
+  if ($setup -notmatch '\$serverAlreadyRunning\s*=\s*\$true' -or
+      $setup -notmatch 'Voice clone created' -or
+      $setup -notmatch 'No audio sample will be uploaded') {
+    throw 'The installer must create the voice before asking the user to restart the existing server.'
+  }
+}
+
 Invoke-Check 'Overview API responds' {
   $response = Get-JarvisResponse '/api/overview'
   $overview = $response.Content | ConvertFrom-Json
