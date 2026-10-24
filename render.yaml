@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: jarvis-assistant
+    runtime: python
+    plan: free
+    buildCommand: python -m py_compile assistant_app.py
+    startCommand: python assistant_app.py
+    envVars:
+      - key: JARVIS_HOST
+        value: 0.0.0.0
+      - key: JARVIS_PROVIDER
+        value: groq
+      - key: JARVIS_USERNAME
+        value: jarvis
+      - key: JARVIS_PASSWORD
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false

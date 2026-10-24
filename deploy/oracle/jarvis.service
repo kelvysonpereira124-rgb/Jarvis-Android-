@@ -1,0 +1,21 @@
+[Unit]
+Description=JARVIS personal assistant
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jarvis
+Group=jarvis
+WorkingDirectory=/opt/jarvis
+EnvironmentFile=/etc/jarvis/jarvis.env
+ExecStart=/usr/bin/python3 /opt/jarvis/assistant_app.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/jarvis
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JARVIS | Assistente Pessoal</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div>
+          <h1>JARVIS</h1>
+          <p class="subtitle">Seu assistente pessoal</p>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span>Total de tarefas</span>
+            <strong id="taskCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Pendentes</span>
+            <strong id="pendingCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Notas</span>
+            <strong id="noteCount">0</strong>
+          </div>
+          <div class="stat-card">
+            <span>Lembretes</span>
+            <strong id="reminderCount">0</strong>
+          </div>
+        </div>
+
+        <div class="mini-panel">
+          <h2>Resumo</h2>
+          <p id="todayText">Hoje</p>
+          <p id="timeText">Hora</p>
+          <p id="aiStatus" role="status">Verificando provedor de IA...</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Converse com o JARVIS</h2>
+            <button id="clearChatButton" class="secondary-button" type="button">Limpar conversa</button>
+          </div>
+          <div id="chatMessages" class="chat-messages" aria-live="polite">
+            <div class="message assistant">
+              Olá! Sou seu assistente pessoal. Posso conversar, responder perguntas e organizar tarefas, lembretes e notas. Experimente falar comigo ou escrever: adicionar tarefa revisar proposta.
+            </div>
+          </div>
+          <form id="chatForm" class="chat-form">
+            <input id="chatInput" type="text" placeholder="Converse com seu assistente..." autocomplete="off" />
+            <div class="chat-actions">
+              <button id="voiceInputButton" class="secondary-button" type="button">Falar</button>
+              <button id="voiceOutputButton" class="secondary-button" type="button" aria-pressed="true">Voz: ligada</button>
+              <button type="submit">Enviar</button>
+            </div>
+          </form>
+          <p id="voiceStatus" class="voice-status" role="status">Pronto. A IA online usa suas mensagens e o resumo dos seus dados pessoais.</p>
+        </section>
+
+        <div class="two-column">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Tarefas</h2>
+            </div>
+            <form id="taskForm" class="stack-form">
+              <input id="taskTitle" type="text" placeholder="Título da tarefa" required />
+              <div class="inline-form">
+                <input id="taskCategory" type="text" placeholder="Categoria" value="Pessoal" />
+                <input id="taskDueDate" type="date" />
+              </div>
+              <button type="submit">Adicionar tarefa</button>
+            </form>
+            <ul id="taskList" class="item-list"></ul>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Notas</h2>
+            </div>
+            <form id="noteForm" class="stack-form">
+              <input id="noteTitle" type="text" placeholder="Título da nota" required />
+              <textarea id="noteContent" rows="4" placeholder="Escreva sua nota..."></textarea>
+              <button type="submit">Salvar nota</button>
+            </form>
+            <ul id="noteList" class="item-list"></ul>
+          </section>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Lembretes</h2>
+          </div>
+          <form id="reminderForm" class="stack-form">
+            <input id="reminderText" type="text" placeholder="Descrição do lembrete" required />
+            <div class="inline-form">
+              <input id="reminderTime" type="time" value="09:00" />
+            </div>
+            <button type="submit">Adicionar lembrete</button>
+          </form>
+          <ul id="reminderList" class="item-list"></ul>
+        </section>
+      </main>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
