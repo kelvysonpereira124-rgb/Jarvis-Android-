@@ -12,7 +12,7 @@ $env:JARVIS_PROVIDER="openai"
 python assistant_app.py
 ```
 
-Em seguida, abra [http://localhost:8000](http://localhost:8000) no Chrome ou Edge e permita o acesso ao microfone. O botão **Falar** inicia o reconhecimento de voz; **Voz: ligada/desligada** controla a leitura das respostas.
+Em seguida, abra [http://localhost:8000](http://localhost:8000) no Chrome ou Edge. Para ativar a palavra de chamada, use o botão discreto de microfone no canto da tela, permita o acesso quando solicitado e mantenha a página aberta. A voz de saída pode ser alternada no chat.
 
 Para usar IA local, instale e inicie o [Ollama](https://ollama.com/), baixe um modelo e rode o servidor assim:
 
@@ -83,7 +83,19 @@ Antes de acessar a VM pela internet, configure um proxy HTTPS (por exemplo, Cadd
 
 ## Privacidade
 
-O servidor aceita conexões apenas do próprio computador. Com OpenAI, a mensagem, o histórico recente do chat e um resumo de tarefas, notas e lembretes são enviados à API para gerar a resposta. Com Ollama, esses dados ficam no computador e são enviados ao servidor local configurado. Os comandos locais reconhecidos são tratados no computador. O histórico visual salvo fica no armazenamento local do navegador; o botão **Limpar conversa** o remove. O reconhecimento de voz depende do navegador e pode usar os serviços de voz configurados pelo próprio navegador.
+O servidor aceita conexões apenas do próprio computador. Com OpenAI ou Groq, a mensagem, o histórico recente do chat e o contexto de tarefas, notas, lembretes e projetos são enviados à API selecionada para gerar a resposta. Com Ollama, esses dados ficam no computador e são enviados ao servidor local configurado. Os comandos e alterações de dados são tratados no computador. O histórico visual salvo fica no armazenamento local do navegador; o botão **Limpar conversa** o remove. O reconhecimento de voz depende do navegador e pode usar os serviços de voz configurados pelo próprio navegador.
+
+## Projetos, ações e voz
+
+O painel inicial mostra somente o núcleo procedural de partículas âmbar em tela cheia, agora com anéis orbitais em perspectiva e paralaxe que acompanha o ponteiro. Mova o mouse sobre o núcleo ou arraste para alterar a rotação; use a roda do mouse para ampliar ou reduzir. Em telas sensíveis ao toque, arraste para girar. O restante dos painéis e controles visuais fica oculto; a conversa e os dados continuam preservados no aplicativo, mas não são exibidos nessa tela. É uma visualização interativa de interface, não um holograma físico.
+
+O JARVIS mantém projetos e etapas no arquivo de dados, mostra o progresso no painel e pode criar planos pela conversa ou pelo formulário. Com provedores compatíveis com ferramentas, ele pode registrar tarefas, notas e lembretes, e reporta separadamente o resultado de cada ação. A conversa recente continua no armazenamento local do navegador e é enviada junto com cada pergunta para preservar contexto. A IA só pode executar as ações limitadas descritas acima; não tem acesso arbitrário ao sistema operacional.
+
+Para ativar a palavra de chamada, clique no botão de microfone no canto da tela, autorize o microfone quando solicitado e mantenha a página aberta. O navegador reinicia o reconhecimento quando possível; diga “Jarvis” e depois o comando. O reconhecimento de fala contínuo não é garantido por todos os navegadores, pode depender de internet e pode enviar áudio/transcrição ao serviço de voz do navegador. Clique novamente no microfone para desligar a escuta ou revogue o acesso ao microfone no navegador.
+
+## Integrações físicas ainda não conectadas
+
+O painel mostra Alexa, comunicações, oficina e sensores como não conectados. Este projeto não atende chamadas nem envia mensagens, não controla dispositivos Alexa ou fechaduras e não monitora câmeras/sensores. Isso requer contas, permissões, aparelhos e adaptadores específicos. Para controle Alexa real, é necessário configurar uma Alexa Smart Home Skill e um endpoint HTTPS com account linking; esses recursos e credenciais não foram criados nem fornecidos. Nunca coloque segredos no repositório ou no chat.
 
 ## Exemplos
 

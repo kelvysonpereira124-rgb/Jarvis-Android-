@@ -31,6 +31,10 @@
             <span>Lembretes</span>
             <strong id="reminderCount">0</strong>
           </div>
+          <div class="stat-card">
+            <span>Projetos ativos</span>
+            <strong id="projectCount">0</strong>
+          </div>
         </div>
 
         <div class="mini-panel">
@@ -38,29 +42,130 @@
           <p id="todayText">Hoje</p>
           <p id="timeText">Hora</p>
           <p id="aiStatus" role="status">Verificando provedor de IA...</p>
+          <p class="personality-label">Personalidade: formal, cordial e com humor seco.</p>
         </div>
+        <section class="mini-panel integration-panel" aria-labelledby="integrationTitle">
+          <h2 id="integrationTitle">Integrações</h2>
+          <p><strong>Alexa:</strong> ainda não conectada. Não controlo dispositivos sem uma skill e configuração válidas.</p>
+          <p><strong>Chamadas e mensagens:</strong> indisponíveis sem provedor conectado.</p>
+          <p><strong>Oficina e sensores:</strong> nenhum equipamento conectado; não há monitoramento em tempo real.</p>
+        </section>
       </aside>
 
       <main class="main-content">
-        <section class="panel">
+        <section class="hud-panel" aria-labelledby="hudTitle">
+          <div class="hud-header">
+            <div>
+              <p class="hud-eyebrow"><span class="status-led"></span> INTERFACE ESPACIAL · ONLINE</p>
+              <h2 id="hudTitle">Núcleo de comando</h2>
+            </div>
+            <div class="hud-header-actions">
+              <span class="hud-clock" id="hudClock">--:--:--</span>
+              <button id="chatToggleButton" class="hud-control-button" type="button" aria-controls="chatPanel" aria-expanded="false">
+                CONVERSAR
+              </button>
+            </div>
+          </div>
+
+          <div class="hud-layout">
+            <div
+              id="hudViewport"
+              class="hud-viewport"
+              role="img"
+              aria-label="Visualização 3D do núcleo do JARVIS. Mova o ponteiro para criar paralaxe, arraste para girar e use a roda do mouse para ampliar."
+            >
+              <div class="hud-grid"></div>
+              <div class="hud-crosshair"></div>
+              <div id="hudObject" class="hud-object">
+                <span class="core-orbit core-orbit--a" aria-hidden="true"></span>
+                <span class="core-orbit core-orbit--b" aria-hidden="true"></span>
+                <span class="core-orbit core-orbit--c" aria-hidden="true"></span>
+                <canvas id="hudCanvas" class="hud-canvas" aria-hidden="true"></canvas>
+              </div>
+              <div class="hud-readout readout-left">
+                <span>ESTADO DO NÚCLEO</span>
+                <strong><i class="status-led"></i> NOMINAL</strong>
+                <small id="hudProvider">IA LOCAL</small>
+              </div>
+              <div class="hud-readout readout-right">
+                <span>ROTINAS REGISTRADAS</span>
+                <strong id="hudTaskTotal">--</strong>
+                <small id="hudProjectTotal">PROJETOS · --</small>
+              </div>
+              <span class="hud-coordinate coordinate-top">N 23° 33′ · SYS-01</span>
+              <span class="hud-coordinate coordinate-bottom">ARRASTE PARA ORBITAR · SCROLL PARA ZOOM</span>
+            </div>
+
+            <div class="hud-controls" aria-label="Controles da visualização 3D">
+              <div class="hud-metric">
+                <span>TAREFAS PENDENTES</span>
+                <strong id="hudPending">--</strong>
+                <div class="metric-track"><span id="hudPendingBar"></span></div>
+              </div>
+              <div class="hud-metric">
+                <span>NOTAS EM MEMÓRIA</span>
+                <strong id="hudNotes">--</strong>
+                <div class="metric-track"><span id="hudNotesBar"></span></div>
+              </div>
+              <div class="hud-zoom-controls">
+                <button id="hudZoomOut" class="hud-control-button" type="button" aria-label="Diminuir zoom">−</button>
+                <button id="hudReset" class="hud-control-button reset-control" type="button">CENTRALIZAR</button>
+                <button id="hudZoomIn" class="hud-control-button" type="button" aria-label="Aumentar zoom">+</button>
+              </div>
+              <p class="hud-caption">Visualização 3D interativa · somente dados reais deste painel.</p>
+            </div>
+          </div>
+          <button
+            id="voiceInputButton"
+            class="core-voice-toggle"
+            type="button"
+            aria-label="Ativar reconhecimento por voz"
+            aria-pressed="false"
+            title="Ativar reconhecimento por voz"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="9" y="2" width="6" height="13" rx="3"></rect>
+              <path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3m-4 0h8"></path>
+            </svg>
+          </button>
+          <p id="voiceStatus" class="sr-only" role="status" aria-live="polite">
+            Reconhecimento por voz desativado. Use o botão de microfone para ativar.
+          </p>
+        </section>
+
+        <section id="chatPanel" class="panel chat-panel" aria-labelledby="chatTitle" hidden>
           <div class="panel-header">
-            <h2>Converse com o JARVIS</h2>
-            <button id="clearChatButton" class="secondary-button" type="button">Limpar conversa</button>
+            <h2 id="chatTitle">Converse com o JARVIS</h2>
+            <div class="chat-panel-actions">
+              <button id="clearChatButton" class="secondary-button" type="button">Limpar conversa</button>
+              <button id="closeChatButton" class="secondary-button" type="button" aria-label="Fechar conversa">Fechar</button>
+            </div>
           </div>
           <div id="chatMessages" class="chat-messages" aria-live="polite">
             <div class="message assistant">
-              Olá! Sou seu assistente pessoal. Posso conversar, responder perguntas e organizar tarefas, lembretes e notas. Experimente falar comigo ou escrever: adicionar tarefa revisar proposta.
+              Olá. Sou JARVIS. Posso organizar tarefas, notas, lembretes e planos de projeto. Para criar itens, diga claramente o que devo registrar; quando faltar informação, perguntarei. O controle da casa e de outros equipamentos ainda não está conectado.
             </div>
           </div>
           <form id="chatForm" class="chat-form">
             <input id="chatInput" type="text" placeholder="Converse com seu assistente..." autocomplete="off" />
             <div class="chat-actions">
-              <button id="voiceInputButton" class="secondary-button" type="button">Falar</button>
               <button id="voiceOutputButton" class="secondary-button" type="button" aria-pressed="true">Voz: ligada</button>
               <button type="submit">Enviar</button>
             </div>
           </form>
-          <p id="voiceStatus" class="voice-status" role="status">Pronto. A IA online usa suas mensagens e o resumo dos seus dados pessoais.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Projetos e planos</h2>
+          </div>
+          <form id="projectForm" class="stack-form">
+            <input id="projectTitle" type="text" placeholder="Nome do projeto" required maxlength="160" />
+            <textarea id="projectGoal" rows="2" placeholder="Objetivo do projeto" required maxlength="1000"></textarea>
+            <textarea id="projectSteps" rows="4" placeholder="Etapas (uma por linha)" required></textarea>
+            <button type="submit">Criar projeto e tarefas</button>
+          </form>
+          <ul id="projectList" class="item-list"></ul>
         </section>
 
         <div class="two-column">
